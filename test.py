@@ -17,3 +17,4 @@ if __name__ == "__main__":
     cv2.imshow('Annotated Image', annotated_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+    

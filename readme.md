@@ -1,5 +1,8 @@
 # 環境設定（windows）
 
+## python 
+version: 3.10.14
+
 ## Visual C++ 2019 runtime
 https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170
 
