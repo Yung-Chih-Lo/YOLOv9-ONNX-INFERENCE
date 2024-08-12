@@ -1,4 +1,11 @@
-# 環境設定（windows）
+# 本機測試環境
+- python: 3.10.14
+- cuda: 12.5
+- onnx: 1.16.2
+- onnxruntime: 1.18.1
+- onnxruntime-gpu: 1.18.1
+
+# 環境安裝參考（Ubuntu）
 
 ## python 
 version: 3.10.14

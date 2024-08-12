@@ -83,8 +83,8 @@ class YOLOv8():
         boxes *= np.array([self.img_width, self.img_height, self.img_width, self.img_height])  # 調整檢測框尺寸
         return boxes
 
-    def plot(self, mask_alpha=0.4):
-        return self.annotator.draw_detections(self.img, self.boxes, self.scores, self.class_ids, mask_alpha)  # 繪製檢測結果
+    def plot(self):
+        return self.annotator.draw_detections(self.img, self.boxes, self.scores, self.class_ids)  # 繪製檢測結果
 
     def get_input_details(self):
         model_inputs = self.session.get_inputs()
