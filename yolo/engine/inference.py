@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import onnxruntime
 import torch
-from yolo.utils import xywh2xyxy, multiclass_nms, get_onnx_session
+from yolo.utils import xywh2xyxy, multiclass_nms, get_onnx_session, get_input_details, get_output_details
 from yolo.utils import Annotator
 
 
@@ -39,8 +39,8 @@ class YOLOv8():
     def initialize_model(self, path):
         self.session = get_onnx_session(path)
         # 獲取模型輸入輸出資訊
-        self.get_input_details()
-        self.get_output_details()
+        self.input_names, self.input_shape, self.input_height, self.input_width = get_input_details(self.session)
+        self.output_names, self.output_shape = get_output_details(self.session)
 
     def detect_objects(self):
         start = time.perf_counter()
@@ -92,17 +92,6 @@ class YOLOv8():
     def plot(self):
         return self.annotator.draw_detections(self.img, self.boxes, self.scores, self.class_ids)  # 繪製檢測結果
 
-    def get_input_details(self):
-        model_inputs = self.session.get_inputs()
-        self.input_names = [model_inputs[i].name for i in range(len(model_inputs))]  # 獲取模型輸入名稱
-        self.input_shape = model_inputs[0].shape
-        self.input_height = self.input_shape[2]
-        self.input_width = self.input_shape[3]
-
-    def get_output_details(self):
-        model_outputs = self.session.get_outputs()
-        self.output_names = [model_outputs[i].name for i in range(len(model_outputs))]  # 獲取模型輸出名稱
-
 
 
 
@@ -111,34 +100,46 @@ class YOLOv9:
                  model_path: str,
                  class_mapping_path: str,
                  original_size: tuple[int, int] = (1280, 720),
-                 score_threshold: float = 0.1,
-                 conf_thresold: float = 0.4,
-                 iou_threshold: float = 0.4,
-                 device: str = "CPU") -> None:
+                 score_thres: float = 0.1,
+                 conf_thres: float = 0.4,
+                 iou_thres: float = 0.4,) -> None:
+        
+        self.conf_threshold = conf_thres  # 設定信心閾值
+        self.iou_threshold = iou_thres  # 設定IoU（交集並集比）閾值
+        self.score_threshold = score_thres # 設定分數閾值, 預設0.1
+        self.boxes =  None
+        self.scores = None
+        self.class_ids = None
+        self.img_height = None
+        self.img_width = None
+        self.input_names = None
+        self.input_shape = None
+        self.input_height = None
+        self.input_width = None
+        self.output_names = None
+        self.annotator = Annotator(model_path)
         self.model_path = model_path
+
+        
         self.class_mapping_path = class_mapping_path
-
-        self.device = device
-        self.score_threshold = score_threshold
-        self.conf_thresold = conf_thresold
-        self.iou_threshold = iou_threshold
+        
         self.image_width, self.image_height = original_size
-        self.create_session()
+        self.initialize_model()
 
+    def initialize_model(self, path):
+        self.session = get_onnx_session(path)
+        # 獲取模型輸入輸出資訊
+        self.input_names, self.input_shape, self.input_height, self.input_width = self.get_input_details(self.session)
+        self.output_names, self.output_shape = self.get_output_details(self.session)
+    
     def create_session(self) -> None:
-        self.session = get_onnx_session(self.model_path)
-        self.model_inputs = self.session.get_inputs()
-        self.input_names = [self.model_inputs[i].name for i in range(len(self.model_inputs))]
-        self.input_shape = self.model_inputs[0].shape
-        self.model_output = self.session.get_outputs()
-        self.output_names = [self.model_output[i].name for i in range(len(self.model_output))]
-        self.input_height, self.input_width = self.input_shape[2:]
-
+        # TODO 待處理，class_mapping 的問題
         if self.class_mapping_path is not None:
             with open(self.class_mapping_path, 'r') as file:
                 yaml_file = yaml.safe_load(file)
                 self.classes = yaml_file['names']
                 self.color_palette = np.random.uniform(0, 255, size=(len(self.classes), 3))
+                
 
     def preprocess(self, img: np.ndarray) -> np.ndarray:
         image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
