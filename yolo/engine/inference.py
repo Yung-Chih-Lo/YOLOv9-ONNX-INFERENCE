@@ -9,7 +9,7 @@ from yolo.utils import Annotator
 
 
 class YOLOv8():
-    def __init__(self, model_path, conf_thres=0.7, iou_thres=0.5):
+    def __init__(self, model_path, conf_thres=0.7, iou_thres=0.5, warmup=True):
         self.conf_threshold = conf_thres  # 設定信心閾值
         self.iou_threshold = iou_thres  # 設定IoU（交集並集比）閾值
         self.boxes =  None
@@ -25,6 +25,12 @@ class YOLOv8():
         self.annotator = Annotator(model_path)
         # 初始化模型
         self.initialize_model(model_path)
+        if warmup:
+            self.warmup()
+
+    def warmup(self):
+        self.img = np.zeros((1, 1, 3), dtype=np.uint8)
+        self.detect_objects()
 
     def __call__(self, image):
         self.img = image

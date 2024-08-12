@@ -8,9 +8,8 @@ if __name__ == "__main__":
     onnx_model_path = 'resources/weights/yolov8m.onnx'
     
     image = cv2.imread(image_path)
-    model = YOLOv8(onnx_model_path)
+    model = YOLOv8(onnx_model_path, warmup=True)
     
-    boxes, scores, class_ids = model(image)
     boxes, scores, class_ids = model(image)
     annotated_image = model.plot()
     # 顯示圖片
