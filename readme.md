@@ -53,6 +53,6 @@ if __name__ == "__main__":
 - yolov10
 
 # References:
-- YOLOv9 model: https://github.com/WongKinYiu/yolov9
+- YOLOv9 official repo: https://github.com/WongKinYiu/yolov9
 - YOLOv9 onnx: https://github.com/danielsyahputra/yolov9-onnx
 - YOLOv8 onnx: https://github.com/ibaiGorordo/ONNX-YOLOv8-Object-Detection
