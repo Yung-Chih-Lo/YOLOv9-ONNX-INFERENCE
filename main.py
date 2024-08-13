@@ -4,7 +4,6 @@ import time
 
 
 if __name__ == "__main__":
-    # 加載測試圖片
     image_path = 'resources/images/test.jpg'
     onnx_model_path = 'resources/weights/yolov9m-converted.onnx'
     

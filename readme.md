@@ -1,21 +1,53 @@
-# 本機測試環境
+# Important
+- 
+
+# My environment
 - python: 3.10.14
 - cuda: 12.5
 - onnx: 1.16.2
 - onnxruntime: 1.18.1
 - onnxruntime-gpu: 1.18.1
 
-# 環境安裝參考（Ubuntu）
-
-## python 
-version: 3.10.14
-
+# Installation
+```
+git clone 
+cd 
+pip install -r requirements.txt
+```
 ## Visual C++ 2019 runtime
-官往連結：https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170
+- official link: https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170
 
-## ONNX-GPU
-
-- 官往連結：https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html#requirements
+## ONNX-GPU: 
+- official link: https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html#requirements
 - CUDA 12.x: pip install onnxruntime-gpu --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
 - CUDA 11.X: pip install onnxruntime-gpu
 
+# Examples:
+
+```
+import cv2
+from yolo import YOLO
+import time
+
+if __name__ == "__main__":
+    image_path = 'resources/images/test.jpg'
+    onnx_model_path = 'resources/weights/yolov9m-converted.onnx'
+    
+    image = cv2.imread(image_path)
+    model = YOLO(model_path=onnx_model_path, warmup=True, device="cuda")
+    start = time.perf_counter()
+    results = model(image)
+    print(f"inference time: {(time.perf_counter() - start)*1000:.2f} ms")
+    annotated_image = model.plot()
+    cv2.imshow('Annotated Image', annotated_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+```
+
+# Next step: 
+- 
+
+# References:
+- YOLOv9 model: https://github.com/WongKinYiu/yolov9
+- YOLOv9 onnx: https://github.com/danielsyahputra/yolov9-onnx
+- YOLOv8 onnx: https://github.com/ibaiGorordo/ONNX-YOLOv8-Object-Detection
