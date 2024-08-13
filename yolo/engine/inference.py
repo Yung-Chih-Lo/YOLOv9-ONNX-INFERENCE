@@ -2,8 +2,6 @@
 import time
 import cv2
 import numpy as np
-import onnxruntime
-import torch
 from yolo.utils import xywh2xyxy, get_onnx_session, get_input_details, get_output_details
 from yolo.utils import Annotator
 
@@ -109,7 +107,7 @@ class YOLO():
         detections = []
         self.boxes, self.scores, self.class_ids = xywh2xyxy(boxes[indices]), scores[indices], class_ids[indices]
         
-        for bbox, score, label in zip(xywh2xyxy(boxes[indices]), scores[indices], class_ids[indices]):
+        for bbox, score, label in zip(self.boxes, self.scores, self.class_ids):
             detections.append({
                 "class_index": label,
                 "confidence": score,
