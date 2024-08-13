@@ -44,13 +44,13 @@ class YOLOv8():
 
     def detect_objects(self):
         start = time.perf_counter()
-        input_tensor = self.prepare_input()  # 準備輸入張量，縮放到
+        input_tensor = self.preprocess()  # 準備輸入張量，縮放到
         outputs = self.inference(input_tensor)  # 執行推理
         self.boxes, self.scores, self.class_ids = self.process_output(outputs)  # 處理推理結果
         print(f"Inference time: {(time.perf_counter() - start)*1000:.2f} ms")
         return self.boxes, self.scores, self.class_ids  # 返回檢測框、分數和類別ID
 
-    def preprocess(self, img: np.ndarray) -> np.ndarray:
+    def preprocess(self) -> np.ndarray:
         """將輸入的影像進行預處理，包括轉換色彩空間、調整大小、縮放像素值和調整張量維度。
 
         Args:
