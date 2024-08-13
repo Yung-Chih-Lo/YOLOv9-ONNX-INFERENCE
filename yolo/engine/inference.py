@@ -10,7 +10,6 @@ class YOLO:
                  imgsz: tuple = (640, 640), warmup: bool = True):
         self.conf_threshold = conf_thres
         self.iou_threshold = iou_thres
-        self.imgsz = imgsz
         self.annotator = Annotator(model_path)
         self.boxes = self.scores = self.class_ids = None
         self.img_height = self.img_width = None
@@ -39,12 +38,9 @@ class YOLO:
 
     def detect_objects(self) -> List[Dict]:
         """執行物件檢測並返回結果"""
-        start = time.perf_counter()
         input_tensor = self._preprocess()
         outputs = self.session.run(self.output_names, {self.input_names[0]: input_tensor})
-        results = self._process_output(outputs)
-        print(f"推理時間: {(time.perf_counter() - start)*1000:.2f} ms")
-        return results
+        return self._process_output(outputs)
 
     def _preprocess(self) -> np.ndarray:
         """預處理輸入影像"""
@@ -62,7 +58,6 @@ class YOLO:
             return []
         class_ids = np.argmax(predictions[:, 4:], axis=1)
         boxes = self._extract_resized_boxes(predictions)
-        
         indices = cv2.dnn.NMSBoxes(boxes, scores, self.conf_threshold, self.iou_threshold)
         self.boxes, self.scores, self.class_ids = xywh2xyxy(boxes[indices]), scores[indices], class_ids[indices]
         
@@ -75,6 +70,6 @@ class YOLO:
         boxes = predictions[:, :4]
         return boxes / input_shape * np.array([self.img_width, self.img_height, self.img_width, self.img_height])
 
-    def plot(self) -> np.ndarray:
+    def plot(self) -> np.ndarray :
         """繪製檢測結果"""
         return self.annotator.draw_detections(self.img, self.boxes, self.scores, self.class_ids)
