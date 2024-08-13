@@ -2,6 +2,7 @@ import numpy as np
 import onnx
 import ast
 import os
+import cv2
 
 # 獲取當前腳本所在的目錄
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -46,6 +47,25 @@ def xywh2xyxy(x):
     y[..., 2] = x[..., 0] + x[..., 2] / 2
     y[..., 3] = x[..., 1] + x[..., 3] / 2
     return y
+
+def preprocess(self, img: np.ndarray) -> np.ndarray:
+    """將輸入的影像進行預處理，包括轉換色彩空間、調整大小、縮放像素值和調整張量維度。
+
+        Args:
+            img (np.ndarray): 輸入的影像
+
+        Returns:
+            np.ndarray: 預處理後的影像張量
+    """
+    image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    resized = cv2.resize(image_rgb, (self.input_width, self.input_height))
+
+    # Scale input pixel value to 0 to 1
+    input_image = resized / 255.0
+    input_image = input_image.transpose(2,0,1)
+    input_tensor = input_image[np.newaxis, :, :, :].astype(np.float32)
+    return input_tensor
+
 
 if __name__=="__main__":
     path="resources/weights/yolov8m.onnx"

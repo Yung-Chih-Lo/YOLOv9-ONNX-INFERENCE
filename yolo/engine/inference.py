@@ -50,7 +50,16 @@ class YOLOv8():
         print(f"Inference time: {(time.perf_counter() - start)*1000:.2f} ms")
         return self.boxes, self.scores, self.class_ids  # 返回檢測框、分數和類別ID
 
-    def prepare_input(self):
+    def preprocess(self, img: np.ndarray) -> np.ndarray:
+        """將輸入的影像進行預處理，包括轉換色彩空間、調整大小、縮放像素值和調整張量維度。
+
+        Args:
+            img (np.ndarray): 輸入的影像
+
+        Returns:
+            np.ndarray: 預處理後的影像張量
+        """
+        # TODO 考慮要不要把這個寫在utils裡面
         self.img_height, self.img_width = self.img.shape[:2]  # 獲取圖片的高度和寬度
         input_img = cv2.cvtColor(self.img, cv2.COLOR_BGR2RGB)  # 將圖片轉換為RGB格式
         input_img = cv2.resize(input_img, (self.input_width, self.input_height))  # 調整圖片大小
@@ -141,24 +150,24 @@ class YOLOv9:
                 self.color_palette = np.random.uniform(0, 255, size=(len(self.classes), 3))
                 
 
-    def preprocess(self, img: np.ndarray) -> np.ndarray:
-        image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        resized = cv2.resize(image_rgb, (self.input_width, self.input_height))
+    def preprocess(self) -> np.ndarray:
+        """將輸入的影像進行預處理，包括轉換色彩空間、調整大小、縮放像素值和調整張量維度。
 
-        # Scale input pixel value to 0 to 1
-        input_image = resized / 255.0
-        input_image = input_image.transpose(2,0,1)
-        input_tensor = input_image[np.newaxis, :, :, :].astype(np.float32)
+        Args:
+            img (np.ndarray): 輸入的影像
+
+        Returns:
+            np.ndarray: 預處理後的影像張量
+        """
+        # TODO 考慮要不要把這個寫在utils裡面
+        self.img_height, self.img_width = self.img.shape[:2]  # 獲取圖片的高度和寬度
+        input_img = cv2.cvtColor(self.img, cv2.COLOR_BGR2RGB)  # 將圖片轉換為RGB格式
+        input_img = cv2.resize(input_img, (self.input_width, self.input_height))  # 調整圖片大小
+        input_img = input_img / 255.0  # 將像素值縮放到0到1之間
+        input_img = input_img.transpose(2, 0, 1)  # 調整圖片張量的維度
+        input_tensor = input_img[np.newaxis, :, :, :].astype(np.float32)  # 增加一個維度並轉換為float32型別
         return input_tensor
-    
-    def xywh2xyxy(self, x):
-        # Convert bounding box (x, y, w, h) to bounding box (x1, y1, x2, y2)
-        y = np.copy(x)
-        y[..., 0] = x[..., 0] - x[..., 2] / 2
-        y[..., 1] = x[..., 1] - x[..., 3] / 2
-        y[..., 2] = x[..., 0] + x[..., 2] / 2
-        y[..., 3] = x[..., 1] + x[..., 3] / 2
-        return y 
+
     
     def postprocess(self, outputs):
         predictions = np.squeeze(outputs).T
@@ -176,7 +185,7 @@ class YOLOv9:
         boxes = boxes.astype(np.int32)
         indices = cv2.dnn.NMSBoxes(boxes, scores, score_threshold=self.score_threshold, nms_threshold=self.iou_threshold)
         detections = []
-        for bbox, score, label in zip(self.xywh2xyxy(boxes[indices]), scores[indices], class_ids[indices]):
+        for bbox, score, label in zip(xywh2xyxy(boxes[indices]), scores[indices], class_ids[indices]):
             detections.append({
                 "class_index": label,
                 "confidence": score,
@@ -189,7 +198,8 @@ class YOLOv9:
         return self.classes[class_id]
         
     def detect(self, img: np.ndarray) -> list:
-        input_tensor = self.preprocess(img)
+        self.img = img  
+        input_tensor = self.preprocess()
         outputs = self.session.run(self.output_names, {self.input_names[0]: input_tensor})[0]
         return self.postprocess(outputs)
     
