@@ -5,15 +5,15 @@ import numpy as np
 from yolo.utils import *
 
 class YOLO:
-    def __init__(self, model_path: str, conf_thres: float = 0.6, iou_thres: float = 0.4,
+    def __init__(self, model_path: str, conf_thres: float = 0.7, iou_thres: float = 0.3,
                  imgsz: tuple = (640, 640), warmup: bool = True):
         """
         初始化 YOLO 類別
         :param model_path: ONNX 模型路徑
-        :param conf_thres: 置信度閾值
-        :param iou_thres: IoU 閾值
-        :param imgsz: 輸入圖像大小
-        :param warmup: 是否進行預熱
+        :param conf_thres: 置信度閾值，預設為 0.6
+        :param iou_thres: IoU 閾值，預設為 0.3
+        :param imgsz: 輸入圖像大小，預設為 (640, 640)
+        :param warmup: 是否進行預熱，預設為 True
         """
         self.conf_threshold = conf_thres
         self.iou_threshold = iou_thres
@@ -66,7 +66,7 @@ class YOLO:
         """
         self.img_height, self.img_width = self.img.shape[:2]  # 獲取原始圖像尺寸
         input_img = cv2.cvtColor(self.img, cv2.COLOR_BGR2RGB)  # 轉換顏色空間
-        input_img = cv2.resize(input_img, (self.input_width, self.input_height))  # 調整圖像大小
+        input_img = cv2.resize(input_img, (self.input_width, self.input_height))  # 調整到模型輸入大小
         input_img = input_img.astype(np.float32) / 255.0  # 歸一化
         return input_img.transpose(2, 0, 1)[np.newaxis, ...]  # 調整維度順序
 
