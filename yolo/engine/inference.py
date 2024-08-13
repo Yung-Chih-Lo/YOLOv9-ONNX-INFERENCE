@@ -8,10 +8,15 @@ from yolo.utils import xywh2xyxy, multiclass_nms, get_onnx_session, get_input_de
 from yolo.utils import Annotator
 
 
-class YOLOv8():
-    def __init__(self, model_path, conf_thres=0.7, iou_thres=0.5, warmup=True):
+class YOLO():
+    def __init__(self, model_path:str, 
+                 conf_thres:float=0.7, 
+                 iou_thres:float=0.5,
+                 imgsz:tuple=(640, 640), 
+                 warmup:bool=True):
         self.conf_threshold = conf_thres  # 設定信心閾值
         self.iou_threshold = iou_thres  # 設定IoU（交集並集比）閾值
+        self.annotator = Annotator(model_path)
         self.boxes =  None
         self.scores = None
         self.class_ids = None
@@ -22,7 +27,7 @@ class YOLOv8():
         self.input_height = None
         self.input_width = None
         self.output_names = None
-        self.annotator = Annotator(model_path)
+        
         # 初始化模型
         self.initialize_model(model_path)
         if warmup:
@@ -49,6 +54,7 @@ class YOLOv8():
         """
         self.session = get_onnx_session(path) # 獲取onnx session
         self.input_names, self.input_shape, self.input_height, self.input_width = get_input_details(self.session) # 獲取模型輸入輸出資訊
+        self.input_height, self.input_width = self.imgsz
         self.output_names, self.output_shape = get_output_details(self.session)
 
     def detect_objects(self) -> list:
@@ -59,7 +65,7 @@ class YOLOv8():
         """
         start = time.perf_counter()
         input_tensor = self.preprocess()  # 將輸入的影像進行預處理
-        outputs = self.inference(input_tensor)  # 執行推理
+        outputs = self.session.run(self.output_names, {self.input_names[0]: input_tensor})  # 執行推理
         self.boxes, self.scores, self.class_ids = self.process_output(outputs)  # 處理推理結果
         print(f"Inference time: {(time.perf_counter() - start)*1000:.2f} ms")
         return self.boxes, self.scores, self.class_ids  # 返回檢測框、分數和類別ID
@@ -82,18 +88,6 @@ class YOLOv8():
         input_tensor = input_img[np.newaxis, :, :, :].astype(np.float32)  # 增加一個維度並轉換為float32型別
         return input_tensor
 
-    def inference(self, input_tensor:np.ndarray) -> list:
-        """執行推理
-
-        Args:
-            input_tensor (np.ndarray): 預處理後的影像張量
-
-        Returns:
-            list: 推理結果
-        """
-        outputs = self.session.run(self.output_names, {self.input_names[0]: input_tensor})  # 執行推理
-        return outputs
-
     def process_output(self, output:list) -> list:
         """處理推理結果
 
@@ -105,13 +99,14 @@ class YOLOv8():
         """
         predictions = np.squeeze(output[0]).T  # 擠壓和轉置輸出
         scores = np.max(predictions[:, 4:], axis=1)  # 獲取每個檢測的最高信心分數
-        predictions = predictions[scores > self.conf_threshold, :]  # 過濾掉低於閾值的檢測
-        scores = scores[scores > self.conf_threshold] # 過濾掉低於閾值的信心分數
-
         if len(scores) == 0:
             return [], [], []  # 如果沒有合格的檢測，返回空列表
-
+        predictions = predictions[scores > self.conf_threshold, :]  # 過濾掉低於閾值的檢測
+        scores = scores[scores > self.conf_threshold] # 過濾掉低於閾值的信心分數
         class_ids = np.argmax(predictions[:, 4:], axis=1)  # 獲取每個檢測的類別ID
+        
+        
+        
         boxes = self.extract_boxes(predictions)  # 提取檢測框
         indices = multiclass_nms(boxes, scores, class_ids, self.iou_threshold)  # 執行非極大值抑制
         return boxes[indices], scores[indices], class_ids[indices]  # 返回抑制後的檢測結果

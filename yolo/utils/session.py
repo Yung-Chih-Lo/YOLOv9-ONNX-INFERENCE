@@ -11,9 +11,7 @@ def get_input_details(session):
     model_inputs = session.get_inputs()
     input_names = [model_inputs[i].name for i in range(len(model_inputs))]  # 獲取模型輸入名稱
     input_shape = model_inputs[0].shape
-    input_height = input_shape[2]
-    input_width = input_shape[3]
-    return input_names, input_shape, input_height, input_width
+    return input_names, input_shape
 
 def get_output_details(session):
     model_outputs = session.get_outputs()
