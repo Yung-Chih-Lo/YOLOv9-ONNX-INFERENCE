@@ -1,17 +1,12 @@
-import cv2
-from yolo import YOLO
+import onnx
 
+# 加載 ONNX 模型
+model = onnx.load("resources/weights/yolov9c.onnx")
 
-if __name__ == "__main__":
-    # 加載測試圖片
-    image_path = 'resources/images/test.jpeg'
-    onnx_model_path = 'resources/weights/yolov8m.onnx'
-    
-    image = cv2.imread(image_path)
-    model = YOLO(onnx_model_path, warmup=True)
-    boxes, scores, class_ids = model(image)
-    annotated_image = model.plot()
-    cv2.imshow('Annotated Image', annotated_image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    
+# 獲取模型的輸入定義
+input_tensor = model.graph.input[0]
+input_tensor.type.tensor_type.shape.dim[2].dim_param =  "640" # 設置高度
+input_tensor.type.tensor_type.shape.dim[3].dim_param =  "640" # 設置寬度
+
+# 保存修改後的模型
+onnx.save(model, "resources/weights/yolov9c.onnx")
