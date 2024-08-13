@@ -10,7 +10,7 @@
 - onnxruntime-gpu: 1.18.1
 
 # Installation:
-```
+```bash
 git clone https://github.com/Yung-Chih-Lo/YOLOv9-ONNX.git
 cd YOLOv9-ONNX
 pip install -r requirements.txt
@@ -29,7 +29,7 @@ pip install -r requirements.txt
 
 # Examples:
 
-```
+```python
 import cv2
 from yolo import YOLO
 import time
