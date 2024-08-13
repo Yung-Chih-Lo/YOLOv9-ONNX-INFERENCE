@@ -9,7 +9,7 @@ if __name__ == "__main__":
     onnx_model_path = 'resources/weights/yolov9m-converted.onnx'
     
     image = cv2.imread(image_path)
-    model = YOLO(model_path=onnx_model_path, warmup=True)
+    model = YOLO(model_path=onnx_model_path, warmup=True, device="cuda")
     start = time.perf_counter()
     results = model(image)
     print(f"inference time: {(time.perf_counter() - start)*1000:.2f} ms")

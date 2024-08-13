@@ -6,7 +6,7 @@ from yolo.utils import *
 
 class YOLO:
     def __init__(self, model_path: str, conf_thres: float = 0.7, iou_thres: float = 0.3,
-                 imgsz: tuple = (640, 640), warmup: bool = True):
+                 imgsz: tuple = (640, 640), warmup: bool = True, device: str = "cuda"):
         """
         初始化 YOLO 類別
         :param model_path: ONNX 模型路徑
@@ -22,7 +22,7 @@ class YOLO:
         self.img_height = self.img_width = None  # 初始化圖像尺寸
         self.input_names = self.input_shape = self.output_names = None  # 初始化模型輸入輸出資訊
         self.input_height, self.input_width = imgsz  # 設定輸入圖像大小
-        
+        self.device = device  # 設定裝置
         self._initialize_model(model_path)  # 初始化模型
         if warmup:
             self._warmup()  # 如果需要，進行預熱
@@ -46,7 +46,7 @@ class YOLO:
         初始化模型相關參數
         :param path: 模型路徑
         """
-        self.session = get_onnx_session(path)  # 獲取 ONNX 會話
+        self.session = get_onnx_session(path, self.device)  # 獲取 ONNX 會話
         self.input_names, self.input_shape = get_input_details(self.session)  # 獲取輸入詳情
         self.output_names, _ = get_output_details(self.session)  # 獲取輸出詳情
 
